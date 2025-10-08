@@ -1,0 +1,21 @@
+-- Test Details
+KEY_ID:  rzp_test_ROuqm8IgPPhMf2
+KEY_SECRET: cFYib2ZdpHoZ3JoFXpn65hC6
+
+
+-- Live Details 
+KEY_ID : rzp_live_RNs9lqLuduxCWX
+KEY_SECRET : 4fv1oAEQ70cX7s37UF0yHal7
+
+
+gahexev174@ampdial.com
+Demo@1234568
+Organization user tttestorg@yopmail.com 1234567890
+
+
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjgxMDc3NDcsInNvdXJjZSI6InNyLWF1dGgtaW50IiwiZXhwIjoxNzYwMzg2MzU0LCJqdGkiOiJDWm9qZWVJdmgyczhBWW9JIiwiaWF0IjoxNzU5NTIyMzU0LCJpc3MiOiJodHRwczovL3NyLWF1dGguc2hpcHJvY2tldC5pbi9hdXRob3JpemUvdXNlciIsIm5iZiI6MTc1OTUyMjM1NCwiY2lkIjoyNjE5OTUsInRjIjozNjAsInZlcmJvc2UiOmZhbHNlLCJ2ZW5kb3JfaWQiOjAsInZlbmRvcl9jb2RlIjoicGlja3JyIn0.GpEIXZwjdDQNUbAh3nU8hOQt4CNRaKxx4agiGNCqPfA","expires_at":1760386352}
+
+
+
+// Consumer KEY: ck_0b0407a74f52ebee35177b7d5bf666f615c8052b
+// Consumer Secret: cs_a4eb00fc11edf35711c9187369872525872699af
