@@ -1,11 +1,11 @@
 import Colors from '@/utils/Colors';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +13,9 @@ import {
   View,
 } from 'react-native';
 import { getSession } from '../../lib/services/authService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Loading from '../components/Loading';
+import Dimenstion from '@/utils/Dimenstion';
 
 interface Product {
   id: number;
@@ -233,11 +236,12 @@ const ChatScreen = () => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} backgroundColor={'transparent'} />
       {!selectedProduct ? (
         <View style={styles.productListContainer}>
-          <Text style={styles.header}>
-            {userId ? 'Select Product to View Your Messages' : 'Please Login to View Messages'}
-          </Text>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>{userId ? 'Select Product to View Your Messages' : 'Please Login to View Messages'}</Text>
+          </View>
 
           {userId && (
             <TextInput
@@ -249,14 +253,19 @@ const ChatScreen = () => {
           )}
 
           {loadingProducts ? (
-            <ActivityIndicator size="large" color={Colors.PRIMARY} style={styles.loader} />
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+              <Loading />
+              <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+                Loading your Chats
+              </Text>
+            </View>
           ) : !userId ? (
             <View style={styles.loginPrompt}>
               <Text style={styles.loginText}>You need to be logged in to view your messages.</Text>
             </View>
           ) : filteredProducts.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>No products with messages found</Text>
+              <Text style={styles.emptyStateText}>No messages with products found</Text>
             </View>
           ) : (
             <FlatList
@@ -280,7 +289,12 @@ const ChatScreen = () => {
           </View>
 
           {loadingMessages ? (
-            <ActivityIndicator size="large" color={Colors.PRIMARY} style={styles.loader} />
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+              <Loading />
+              <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+                Loading your Chats
+              </Text>
+            </View>
           ) : messages.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateText}>No messages yet</Text>
@@ -323,7 +337,21 @@ const ChatScreen = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f6f7fb' },
-  header: { fontSize: 22, fontWeight: '700', padding: 16, color: Colors.PRIMARY, textAlign: 'center' },
+  header: {
+    padding: 16,
+    backgroundColor: Colors.PRIMARY,
+    marginBottom: 10,
+    height: Dimenstion.headerHeight,
+    justifyContent: 'flex-end',
+    textAlign: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  headerText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: Colors.WHITE,
+  },
   productListContainer: { flex: 1 },
   searchInput: {
     marginHorizontal: 16,

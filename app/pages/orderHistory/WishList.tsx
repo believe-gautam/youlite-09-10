@@ -5,16 +5,20 @@ import Colors from '@/utils/Colors';
 import Dimenstion from '@/utils/Dimenstion';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Loading from '@/app/components/Loading';
 
 /* ---------------------------- Types & helpers ---------------------------- */
 interface WishListItem {
@@ -211,7 +215,8 @@ const WishList: React.FC = () => {
             {busyRemove ? (
               <ActivityIndicator size={18} color="#EF4444" />
             ) : (
-              <Ionicons name="heart-dislike" size={20} color="#EF4444" />
+              // <Ionicons name="heart-dislike" size={20} color="#EF4444" />
+              <MaterialIcons name="delete" size={20} color="#EF4444" />
             )}
           </TouchableOpacity>
 
@@ -241,7 +246,12 @@ const WishList: React.FC = () => {
   /* -------------------- UI -------------------- */
   if (loading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          backgroundColor={Colors.PRIMARY}
+          barStyle={'dark-content'}
+          translucent={false}
+        />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color={Colors.WHITE} />
@@ -254,10 +264,14 @@ const WishList: React.FC = () => {
             </View>
           </View>
         </View>
-        <View style={styles.emptyContainer}>
-          <Text>Loading...</Text>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Loading />
+          <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: '#4a5568' }}>
+            Loading your WishList...
+          </Text>
         </View>
-      </View>
+
+      </SafeAreaView>
     );
   }
 

@@ -1,4 +1,4 @@
-import { loginCustomerByEmail } from "@/lib/services/authService";
+import { loginCustomerByEmail } from "../../lib/services/authService";
 import Colors from "@/utils/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";

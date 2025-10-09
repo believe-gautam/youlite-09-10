@@ -10,13 +10,13 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import CartCount from '../pages/AddToCart/CartCount';
 import WishlistCount from '../pages/AddToCart/WishlistCount';
@@ -164,8 +164,10 @@ const Header: React.FC = () => {
           <Text style={styles.welcome}>{displayLocation}</Text>
           <Text style={styles.username}>{displayName}</Text>
         </View>
-        <WishlistCount count={wishlistIds.length} />
-        <CartCount count={cartItems.length} />
+        <View style={{flexDirection:'row',alignItems:'center', gap: 10 }}>
+          <WishlistCount count={wishlistIds.length} />
+          <CartCount count={cartItems.length} />
+        </View>
       </View>
 
       {/* Search input */}

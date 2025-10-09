@@ -17,10 +17,8 @@ import {
 } from "react-native";
 
 // ✅ Use the updated authService without JWT
-import {
-  loginCustomerByEmail,
-  registerCustomer,
-} from "@/lib/services/authService";
+import { loginCustomer, registerCustomer } from "@/lib/services/authService";
+
 
 const LoginRegisterPage = () => {
   // UI state
@@ -83,13 +81,13 @@ const LoginRegisterPage = () => {
 
   // ✅ Handle Login (by email only)
   const handleLogin = async () => {
-    if (!email) {
-      Alert.alert("Error", "Please enter your email");
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password");
       return;
     }
     setIsLoading(true);
     try {
-      await loginCustomerByEmail(email);
+      const { user, token } = await loginCustomer({ email, password });
       Alert.alert("Success", "Login successful!");
       router.replace("/(tabs)");
     } catch (error: any) {

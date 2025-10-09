@@ -4,41 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const About = () => {
-  const teamMembers = [
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      role: 'CEO & Founder',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-    },
-    {
-      id: 2,
-      name: 'Michael Chen',
-      role: 'CTO',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-    },
-    {
-      id: 3,
-      name: 'Emma Rodriguez',
-      role: 'Head of Design',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-    },
-    {
-      id: 4,
-      name: 'David Kim',
-      role: 'Marketing Director',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80',
-    },
-  ];
-
   const features = [
     {
       id: 1,
       icon: 'rocket',
       title: 'Fast Delivery',
-      description: 'Get your orders delivered within 24 hours in major cities',
+      description: 'Get your orders delivered at your home',
     },
     {
       id: 2,
@@ -65,25 +39,19 @@ const About = () => {
       id: 1,
       name: 'Facebook',
       icon: 'logo-facebook',
-      url: 'https://facebook.com/youcommerce',
+      url: 'https://www.facebook.com/share/1FQazZ99sA/',
     },
     {
       id: 2,
       name: 'Instagram',
       icon: 'logo-instagram',
-      url: 'https://instagram.com/youcommerce',
+      url: 'https://www.instagram.com/youlite_official?igsh=cHB5ZDV4ZWFndTRm',
     },
     {
       id: 3,
-      name: 'Twitter',
-      icon: 'logo-twitter',
-      url: 'https://twitter.com/youcommerce',
-    },
-    {
-      id: 4,
-      name: 'LinkedIn',
-      icon: 'logo-linkedin',
-      url: 'https://linkedin.com/company/youcommerce',
+      name: 'Youtube',
+      icon: 'logo-youtube',
+      url: 'https://youtube.com/@youliteofficial?si=Nx-ibad76bHQRJXc',
     },
   ];
 
@@ -92,14 +60,14 @@ const About = () => {
   };
 
   const handleContactPress = () => {
-    const email = 'examle123@gmail.com';
+    const email = 'youliteledlightingpvtltd@gmail.com';
     const subject = 'Contact Us - Youlite';
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     Linking.openURL(mailtoUrl).catch(err => console.error('Failed to open email client:', err));
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -115,7 +83,7 @@ const About = () => {
           <Text style={styles.heroTitle}>Youlite</Text>
           <Text style={styles.heroSubtitle}>Redefining Online Shopping</Text>
           <Text style={styles.heroDescription}>
-            Founded in 2020, Youlite has been committed to providing exceptional shopping experiences
+            Youlite has been committed to providing exceptional shopping experiences
             with quality products, competitive prices, and outstanding customer service.
           </Text>
         </View>
@@ -134,7 +102,7 @@ const About = () => {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>50+</Text>
-            <Text style={styles.statLabel}>Countries</Text>
+            <Text style={styles.statLabel}>City</Text>
           </View>
         </View>
 
@@ -164,19 +132,6 @@ const About = () => {
           </Text>
         </View>
 
-        {/* Team Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Our Team</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.teamContainer}>
-            {teamMembers.map((member) => (
-              <View key={member.id} style={styles.teamMember}>
-                <Image source={{ uri: member.image }} style={styles.teamImage} />
-                <Text style={styles.teamName}>{member.name}</Text>
-                <Text style={styles.teamRole}>{member.role}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
 
         {/* Social Links */}
         <View style={styles.section}>
@@ -207,7 +162,7 @@ const About = () => {
           <Text style={styles.footerVersion}>App Version 2.4.1</Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

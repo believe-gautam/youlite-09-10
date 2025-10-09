@@ -182,7 +182,7 @@ const OrderHistory: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar
         backgroundColor={Colors.PRIMARY}
-        barStyle={'light-content'}
+        barStyle={'dark-content'}
         translucent={false}
       />
 

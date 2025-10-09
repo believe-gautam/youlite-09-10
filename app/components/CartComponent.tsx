@@ -19,6 +19,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'; // Import Reanimated for animation
+import Loading from './Loading';
 const { width } = Dimensions.get('window');
 
 /* ------------------------------ Types ------------------------------ */
@@ -171,14 +172,11 @@ const Cart: React.FC = () => {
   /* -------------------- Loading -------------------- */
   if (loading) {
     return (
-      <View style={styles.loader}>
-        <Animated.View style={animatedStyle}>
-          <Image
-            source={imagePath.loader} // Use loader image from imagePath
-            style={styles.loaderImage}
-          />
-        </Animated.View>
-        <Text style={styles.loaderText}>Loading your cart...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Cart
+        </Text>
       </View>
     );
   }
@@ -281,7 +279,12 @@ const Cart: React.FC = () => {
                       disabled={busyQty[item.id] || item.quantity <= 1}
                     >
                       {busyQty[item.id] ? (
-                        <ActivityIndicator size={16} color={Colors.PRIMARY} />
+                        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                          <Loading />
+                          <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+                            Loading your Products
+                          </Text>
+                        </View>
                       ) : (
                         <Ionicons name="remove" size={20} color="#333" />
                       )}
@@ -397,10 +400,6 @@ const styles = StyleSheet.create({
   headerButton: { padding: 8 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: Colors.WHITE },
   cartCountText: { fontSize: 16, fontWeight: '600', color: Colors.WHITE },
-
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-  loaderImage: { width: 60, height: 60, marginBottom: 12 }, // Style for loader image
-  loaderText: { fontSize: 16, color: '#666' },
 
   /* quick links */
   buttonContainer: {

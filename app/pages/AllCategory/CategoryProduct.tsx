@@ -17,6 +17,7 @@ import {
   View,
 } from 'react-native';
 import { loadProductsByCategory, normalizeProduct } from '@/lib/services/productService';
+import Loading from '@/app/components/Loading';
 
 const { width } = Dimensions.get('window');
 
@@ -269,6 +270,7 @@ const CategoryProduct: React.FC = () => {
             )}
           </TouchableOpacity>
         </View>
+
       </TouchableOpacity>
     );
   };
@@ -278,8 +280,11 @@ const CategoryProduct: React.FC = () => {
   /* ---------- UI ---------- */
   if (loading) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Products...
+        </Text>
       </View>
     );
   }
@@ -292,7 +297,7 @@ const CategoryProduct: React.FC = () => {
           <Ionicons name="arrow-back" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{title}</Text>
-        <TouchableOpacity onPress={() => router.push('/(tabs)/Cart')}>
+        <TouchableOpacity onPress={() => router.push('/CartScreen')}>
           <CartCount count={cartItems.length} />
         </TouchableOpacity>
       </View>
@@ -302,7 +307,7 @@ const CategoryProduct: React.FC = () => {
         {error && <Text style={{ color: 'red', padding: 16 }}>{error}</Text>}
 
         {featured.length > 0 && (
-          <View style={styles.section}>
+          <View style={styles.featureSection}>
             <Text style={styles.sectionTitle}>Featured</Text>
             <FlatList
               horizontal
@@ -310,7 +315,10 @@ const CategoryProduct: React.FC = () => {
               renderItem={renderCard}
               keyExtractor={keyExtractor}
               showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+              contentContainerStyle={{ padding: 8 }}
             />
+
           </View>
         )}
 
@@ -323,6 +331,8 @@ const CategoryProduct: React.FC = () => {
               renderItem={renderCard}
               keyExtractor={keyExtractor}
               showsHorizontalScrollIndicator={false}
+              ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+              contentContainerStyle={{ padding: 8 }}
             />
           </View>
         )}
@@ -337,6 +347,8 @@ const CategoryProduct: React.FC = () => {
             ))}
           </View>
         </View>
+
+
       </ScrollView>
 
       {toast && (
@@ -381,7 +393,8 @@ const styles = StyleSheet.create({
   cartBadgeText: { color: Colors.PRIMARY, fontSize: 12, fontWeight: 'bold' },
 
   /* section */
-  section: { paddingHorizontal: 16, marginBottom: 16 },
+  featureSection: { margin: 8 },
+  section: { margin: 8 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: Colors.SECONDARY },
 
   /* grid */

@@ -17,6 +17,7 @@ import { getProducts } from '@/lib/api/productApi';
 import { getCategories } from '@/lib/api/categoryApi';
 import { getCustomerById, getSession, updateCustomerById } from '@/lib/services/authService';
 import { useLocalSearchParams, router } from 'expo-router';
+import Loading from '@/app/components/Loading';
 
 const { width } = Dimensions.get('window');
 
@@ -249,9 +250,11 @@ const LatestAll = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-        <Text style={styles.loadingTxt}>Loading products...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Products...
+        </Text>
       </View>
     );
   }

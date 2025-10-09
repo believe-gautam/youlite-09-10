@@ -25,7 +25,7 @@ export interface WCProduct {
   brand?: string;
   categories?: WCCategory[];
   images?: WCImage[];
-  [key: string]: any; // allow extra fields
+  [key: string]: any;
 }
 
 export interface NormalizedProduct {
@@ -58,25 +58,24 @@ const buildDiscount = (regularPrice: number, salePrice: number): string | null =
   return null;
 };
 
-// Normalize a WooCommerce product into an app-friendly shape
+// Normalize WooCommerce product into app-friendly format
 export const normalizeProduct = (
   p: WCProduct,
   fallbackCategory = 'Uncategorized'
 ): NormalizedProduct => {
   const salePrice = toNumber(p?.sale_price ?? p?.price, 0);
   const regularPrice = toNumber(p?.regular_price ?? p?.price, 0);
-
   const discount = buildDiscount(regularPrice, salePrice);
 
   const firstCategoryName =
     Array.isArray(p?.categories) && p.categories.length > 0
       ? p.categories[0]?.name
-      : undefined;
+      : fallbackCategory;
 
-  // FIX: access first image element correctly
+  // ✅ FIXED: properly access first image
   const firstImage =
-    Array.isArray(p?.images) && p.images.length > 0 && p.images?.src
-      ? String(p.images.src)
+    Array.isArray(p?.images) && p.images.length > 0 && p.images[0]?.src
+      ? String(p.images[0].src)
       : null;
 
   return {
@@ -86,9 +85,9 @@ export const normalizeProduct = (
     regularPrice,
     salePrice,
     discount,
-    image: firstImage && firstImage.trim().length > 0 ? firstImage : null,
+    image: firstImage,
     rating: toNumber(p?.average_rating ?? 0, 0),
-    category: firstCategoryName ?? fallbackCategory,
+    category: firstCategoryName,
     brand: typeof p?.brand === 'string' ? p.brand : '',
     isFeatured: !!p?.featured,
     isTrending: Number(p?.rating_count ?? 0) > 10,
@@ -96,6 +95,7 @@ export const normalizeProduct = (
   };
 };
 
+// Fetch products by category
 export const loadProductsByCategory = async (
   categoryId: string | number,
   options: {
@@ -126,9 +126,7 @@ export const loadProductsByCategory = async (
   }
 };
 
-/**
- * Load single product by ID
- */
+// Fetch single product by ID
 export const loadProductById = async (
   productId: string | number
 ): Promise<WCProduct | null> => {
@@ -142,9 +140,7 @@ export const loadProductById = async (
   }
 };
 
-/**
- * Search products with optional category filter
- */
+// Search products
 export const searchProducts = async (
   search: string,
   options: {
@@ -166,7 +162,6 @@ export const searchProducts = async (
     status: options.status ?? 'publish',
   };
 
-  // prune undefined keys
   Object.keys(params).forEach((k) => params[k] === undefined && delete params[k]);
 
   try {
@@ -178,6 +173,7 @@ export const searchProducts = async (
   }
 };
 
+// Fetch featured products
 export const loadFeaturedProducts = async (
   options: {
     perPage?: number;
@@ -205,9 +201,7 @@ export const loadFeaturedProducts = async (
   }
 };
 
-/**
- * Map a WooCommerce product to a simple Featured tile shape.
- */
+// Convert WooCommerce product → Gem card format
 export const normalizeToGem = (
   p: WCProduct,
   fallbackImage: any
@@ -225,7 +219,7 @@ export const normalizeToGem = (
 
   const firstImage =
     Array.isArray(p?.images) && p.images.length > 0 && p.images[0]?.src
-      ? String(p.images.src)
+      ? String(p.images[0].src)
       : null;
 
   const discount =

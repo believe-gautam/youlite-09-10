@@ -27,7 +27,7 @@ const Contact = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar
         backgroundColor="transparent"
-        barStyle="dark-content"
+        barStyle="light-content"
       />
       <ScrollView >
         <View style={styles.header}>
@@ -86,32 +86,33 @@ const Contact = () => {
           <View style={styles.socialIcons}>
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => openLink('https://facebook.com')}
+              onPress={() => openLink('https://www.facebook.com/share/1FQazZ99sA/')}
             >
               <Ionicons name="logo-facebook" size={28} color="#3b5998" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => openLink('https://twitter.com')}
-            >
-              <Ionicons name="logo-twitter" size={28} color="#1da1f2" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={() => openLink('https://instagram.com')}
+              onPress={() => openLink('https://www.instagram.com/youlite_official?igsh=cHB5ZDV4ZWFndTRm')}
             >
               <Ionicons name="logo-instagram" size={28} color="#e1306c" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.socialButton}
-              onPress={() => openLink('https://linkedin.com')}
+              onPress={() => openLink('https://youtube.com/@youliteofficial?si=Nx-ibad76bHQRJXc')}
             >
-              <Ionicons name="logo-linkedin" size={28} color="#0077b5" />
+              <Ionicons name="logo-youtube" size={28} color="#FF0000" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={() => openLink('https://wa.me/1143587138')}
+            >
+              <Ionicons name="logo-whatsapp" size={28} color="#25D366" />
             </TouchableOpacity>
           </View>
         </View>
+
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
@@ -124,9 +125,9 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    flexDirection:'row',
-    justifyContent:'space-between',
-    
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+
   },
   title: {
     fontSize: 28,
@@ -258,3 +259,6 @@ const styles = StyleSheet.create({
 });
 
 export default Contact;
+
+
+

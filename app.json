@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "YouLite",
+    "scheme": "youlite",
     "userInterfaceStyle": "automatic",
     "sdkVersion": "54.0.0",
     "newArchEnabled": true,

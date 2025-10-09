@@ -1,3 +1,4 @@
+import Loading from '@/app/components/Loading';
 import { getProducts } from '@/lib/api/productApi';
 import { getCustomerById, getSession, updateCustomerById } from '@/lib/services/authService';
 import Colors from '@/utils/Colors';
@@ -702,9 +703,11 @@ const SearchResults: React.FC = () => {
         </View>
 
         {loading ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color={Colors.PRIMARY} />
-            <Text style={styles.loadingText}>Finding great matches...</Text>
+          <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+            <Loading />
+            <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+              Finding great matches...
+            </Text>
           </View>
         ) : error ? (
           <View style={styles.stateWrap}>

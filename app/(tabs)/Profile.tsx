@@ -9,7 +9,6 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   LayoutAnimation,
@@ -28,6 +27,7 @@ import {
   getSession,
   updateCustomerById,
 } from '@/lib/services/authService';
+import Loading from '../components/Loading';
 
 // Types
 type WCAddress = {
@@ -262,7 +262,10 @@ const ProfileScreen = () => {
   if (loading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Profile
+        </Text>
       </View>
     );
   }
@@ -450,7 +453,7 @@ const ProfileScreen = () => {
             <View style={styles.settingIconContainer}>
               <Ionicons name="information-circle-outline" size={22} style={styles.sectionIcon} />
             </View>
-            <Text style={styles.settingText}>About App</Text>
+            <Text style={styles.settingText}>About Us</Text>
             <Ionicons name="chevron-forward" size={18} color="#999" />
           </TouchableOpacity>
 
@@ -459,14 +462,6 @@ const ProfileScreen = () => {
               <Ionicons name="lock-closed-outline" size={22} style={styles.sectionIcon} />
             </View>
             <Text style={styles.settingText}>Change Password</Text>
-            <Ionicons name="chevron-forward" size={18} color="#999" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.settingItem} onPress={() => router.push('/pages/Profile/Addresses')}>
-            <View style={styles.settingIconContainer}>
-              <Ionicons name="location-outline" size={22} style={styles.sectionIcon} />
-            </View>
-            <Text style={styles.settingText}>Shipping Addresses</Text>
             <Ionicons name="chevron-forward" size={18} color="#999" />
           </TouchableOpacity>
 

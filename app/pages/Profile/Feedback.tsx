@@ -42,6 +42,7 @@ export default function Feedback() {
           <Ionicons name="arrow-back" size={24} color={Colors.WHITE} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Send Feedback</Text>
+        <View></View>
       </View>
       <View style={styles.formContainer}>
         <Text style={styles.label}>Your Feedback</Text>

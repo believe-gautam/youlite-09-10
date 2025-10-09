@@ -1,4 +1,11 @@
+import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+
+// ----------------- AUTH FUNCTIONS -----------------
+
+/**
+ * Register a new WooCommerce customer using your existing API helper
+ */
 import {
   apiFindCustomerByEmail,
   apiGetCustomer,
@@ -25,12 +32,18 @@ export type RegisterPayload = {
   shipping?: Record<string, any>;
 };
 
-// Session management
+export type LoginPayload = {
+  email: string;
+  password: string;
+};
+
+// ----------------- SESSION MANAGEMENT -----------------
+
 const SESSION_KEY = "auth_session";
 
-export const storeSession = async (user: AuthUser) => {
+export const storeSession = async (user: AuthUser, token?: string) => {
   try {
-    const session = { user };
+    const session = { user, token };
     await SecureStore.setItemAsync(SESSION_KEY, JSON.stringify(session));
     return true;
   } catch (error) {
@@ -60,14 +73,13 @@ export const clearSession = async () => {
   }
 };
 
-// ========== AUTH FLOWS ==========
+// ----------------- API ENDPOINTS -----------------
 
-/**
- * Register a new WooCommerce customer and store session.
- */
+const API_BASE = "https://youlitestore.in/wp-json"; // Replace with your WooCommerce site
+const JWT_LOGIN = `${API_BASE}/jwt-auth/v1/token`;
+
 export const registerCustomer = async (payload: RegisterPayload) => {
-  if (!payload?.email) throw new Error("Email is required.");
-  if (!payload?.password) throw new Error("Password is required.");
+  if (!payload.email || !payload.password) throw new Error("Email and password required");
 
   const customer = await apiRegisterCustomer(payload);
 
@@ -79,6 +91,7 @@ export const registerCustomer = async (payload: RegisterPayload) => {
     name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim(),
   };
 
+  // Optional: automatically login after registration
   await storeSession(user);
   return customer;
 };
@@ -101,22 +114,49 @@ export const updateCustomerById = async (
 };
 
 /**
- * Login by email (basic lookup).
- * NOTE: This does NOT validate password on WooCommerce API.
- * If you need password auth, you'd need a custom WP plugin or JWT.
+ * Login using WooCommerce JWT plugin
  */
-export const loginCustomerByEmail = async (email: string) => {
-  const customer = await apiFindCustomerByEmail(email);
-  if (!customer) throw new Error("Customer not found.");
+export const loginCustomer = async (payload: LoginPayload) => {
+  if (!payload.email || !payload.password) throw new Error("Email and password required");
 
-  const user: AuthUser = {
-    id: customer.id,
-    email: customer.email,
-    first_name: customer.first_name,
-    last_name: customer.last_name,
-    name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim(),
-  };
+  try {
+    // Request JWT token from WP
+    const res = await axios.post(JWT_LOGIN, {
+      username: payload.email,
+      password: payload.password,
+    });
 
-  await storeSession(user);
-  return user;
+    const token = res.data.token;
+
+    // Get user info from WooCommerce API using email
+    const customer = await apiFindCustomerByEmail(payload.email);
+    if (!customer) throw new Error("Customer not found.");
+
+    const user: AuthUser = {
+      id: customer.id,
+      email: customer.email,
+      first_name: customer.first_name,
+      last_name: customer.last_name,
+      name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim(),
+    };
+
+    // Store session with JWT token
+    await storeSession(user, token);
+
+    return { user, token };
+  } catch (error: any) {
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      throw new Error("Invalid email or password");
+    }
+    console.error("Login error:", error.response || error.message);
+    throw new Error(error.message || "Login failed");
+  }
+};
+
+/**
+ * Logout user
+ */
+export const logoutCustomer = async () => {
+  await clearSession();
+  return true;
 };

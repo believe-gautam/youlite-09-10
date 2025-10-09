@@ -11,6 +11,7 @@ import {
   FlatList,
   Image,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +19,8 @@ import {
 } from 'react-native';
 // Import rating services
 import { loadReviews } from '@/lib/services/ratingServices';
+import Loading from '@/app/components/Loading';
+import { SafeAreaView } from 'react-native-safe-area-context';
 interface Product {
   id: string;
   name: string;
@@ -184,9 +187,9 @@ const mapToUIProduct = (p: WCProduct): Product => {
   const options =
     attr && Array.isArray(attr.options) && attr.options.length > 0
       ? attr.options
-          .map((opt) => (typeof opt === 'string' ? opt : ''))
-          .map((s) => s.trim())
-          .filter((s) => s.length > 0)
+        .map((opt) => (typeof opt === 'string' ? opt : ''))
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
       : ['Default'];
   return {
     id: String(p?.id ?? ''),
@@ -247,8 +250,8 @@ const submitProductReview = async (productId: string, reviewData: {
 }) => {
   try {
     console.log('Submitting review:', { productId, ...reviewData });
-    
-    return { 
+
+    return {
       id: Math.floor(Math.random() * 1000) + 100,
       ...reviewData,
       date_created: new Date().toISOString()
@@ -490,11 +493,11 @@ const ItemDetails: React.FC = () => {
   const renderRelatedProduct = ({ item }: { item: RelatedProduct }) => {
     const isInCart = cartItems.includes(item.id);
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.relatedProduct}
         onPress={() => router.push({ pathname: '/pages/DetailsOfItem/ItemDetails', params: { id: item.id, title: item.title } })}
       >
-        <Image source={{ uri: item.image }} style={styles.relatedProductImage} />
+        {/* <Image source={{ uri: item.image }} style={styles.relatedProductImage} /> */}
         <Text style={styles.relatedProductName} numberOfLines={1}>{item.name}</Text>
         <View style={styles.relatedProductRating}>
           <Ionicons name="star" size={14} color="#FFD700" />
@@ -533,7 +536,7 @@ const ItemDetails: React.FC = () => {
     );
   };
   const renderReview = (item: Review) => (
-    <View key={item.id} style={styles.reviewItem}>
+    <SafeAreaView key={item.id} style={styles.reviewItem}>
       <View style={styles.reviewHeader}>
         <Text style={styles.reviewReviewer}>{item.reviewer}</Text>
         <View style={styles.reviewStars}>
@@ -549,13 +552,15 @@ const ItemDetails: React.FC = () => {
         <Text style={styles.reviewDate}>{item.date}</Text>
       </View>
       <Text style={styles.reviewComment}>{item.comment}</Text>
-    </View>
+    </SafeAreaView>
   );
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-        <Text style={{ color: '#666', marginTop: 10 }}>Loading product...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Product....
+        </Text>
       </View>
     );
   }
@@ -576,7 +581,11 @@ const ItemDetails: React.FC = () => {
   const isProductInCart = cartItems.includes(product.id);
   const total = product.price * quantity;
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        backgroundColor="transparent"
+        barStyle="dark-content"
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Product Images */}
         <View style={styles.imageSection}>
@@ -625,8 +634,58 @@ const ItemDetails: React.FC = () => {
             </Text>
           </View>
           <TouchableOpacity style={styles.button} onPress={handleGoToChat}>
-            <Text style={styles.buttonText}>Go to Chat</Text>
+            <Text style={styles.buttonText}>Let's Talk</Text>
           </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.wishlistButton} onPress={toggleWishlist}>
+              <Ionicons
+                name={isInWishlist ? "heart" : "heart-outline"}
+                size={24}
+                color={isInWishlist ? Colors.PRIMARY : Colors.PRIMARY}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addToCartButtonFooter}
+              onPress={() => !isProductInCart && handleAddToCart(product.id, quantity)}
+              disabled={addToCartLoading || isProductInCart}
+            >
+              {addToCartLoading ? (
+                <ActivityIndicator size="small" color={Colors.WHITE} />
+              ) : isProductInCart ? (
+                <Ionicons name="checkmark" size={20} color={Colors.WHITE} />
+              ) : (
+                <Text style={styles.addToCartTextFooter}>Add to Cart</Text>
+              )}
+            </TouchableOpacity>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <TouchableOpacity
+                style={styles.checkoutButton}
+                onPress={async () => {
+                  if (!userId) {
+                    router.push('/Login/LoginRegisterPage');
+                    return;
+                  }
+                  router.push({
+                    pathname: '/pages/Checkout/Checkout',
+                    params: {
+                      buyNow: 'true',
+                      productId: product.id,
+                      quantity: quantity.toString(),
+                      option: selectedOption,
+                    }
+                  });
+                }}
+              >
+                <Text style={styles.checkoutText}>
+                  {`Buy Now`}
+                </Text>
+              </TouchableOpacity>
+
+            </View>
+          </View>
+
+
           <View style={styles.colorSection}>
             <Text style={styles.sectionTitle}>{product.attributeName}: {selectedOption}</Text>
             <Picker
@@ -669,6 +728,11 @@ const ItemDetails: React.FC = () => {
               </TouchableOpacity>
             </View>
           </View>
+
+
+
+
+
           <View style={styles.descriptionSection}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.descriptionText}>{product.description || 'No description.'}</Text>
@@ -702,59 +766,13 @@ const ItemDetails: React.FC = () => {
           />
         </View>
       </ScrollView>
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.wishlistButton} onPress={toggleWishlist}>
-          <Ionicons
-            name={isInWishlist ? "heart" : "heart-outline"}
-            size={24}
-            color={isInWishlist ? Colors.PRIMARY : Colors.PRIMARY}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.addToCartButtonFooter} 
-          onPress={() => !isProductInCart && handleAddToCart(product.id, quantity)} 
-          disabled={addToCartLoading || isProductInCart}
-        >
-          {addToCartLoading ? (
-            <ActivityIndicator size="small" color={Colors.WHITE} />
-          ) : isProductInCart ? (
-            <Ionicons name="checkmark" size={20} color={Colors.WHITE} />
-          ) : (
-            <Text style={styles.addToCartTextFooter}>Add to Cart</Text>
-          )}
-        </TouchableOpacity>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={async () => {
-              if (!userId) {
-                router.push('/Login/LoginRegisterPage');
-                return;
-              }
-              router.push({
-                pathname: '/pages/Checkout/Checkout',
-                params: {
-                  buyNow: 'true',
-                  productId: product.id,
-                  quantity: quantity.toString(),
-                  option: selectedOption,
-                }
-              });
-            }}
-          >
-            <Text style={styles.checkoutText}>
-              {`Buy Now`}
-            </Text>
-          </TouchableOpacity>
-          
-        </View>
-      </View>
+
       {feedbackMessage ? (
         <View style={styles.messageContainer}>
           <Text style={styles.messageText}>{feedbackMessage}</Text>
         </View>
       ) : null}
-    </View>
+    </SafeAreaView>
   );
 };
 export default ItemDetails;
@@ -824,7 +842,7 @@ const styles = StyleSheet.create({
   relatedProductPrice: { fontSize: 16, fontWeight: 'bold', color: '#4a6cf7', marginBottom: 8 },
   addToCartButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.PRIMARY, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6 },
   addToCartText: { fontSize: 12, fontWeight: '600', color: Colors.WHITE, marginLeft: 4 },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', backgroundColor: 'white', padding: 16, borderTopWidth: 1, borderTopColor: '#e2e8f0' },
+  footer: { flexDirection: 'row', backgroundColor: 'white', padding: 16, borderTopWidth: 1, borderTopColor: '#e2e8f0' },
   wishlistButton: { justifyContent: 'center', alignItems: 'center', padding: 15, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, marginRight: 10 },
   addToCartButtonFooter: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 15, backgroundColor: Colors.SECONDARY, borderRadius: 8, marginRight: 10 },
   addToCartTextFooter: { color: Colors.WHITE, fontWeight: '600', fontSize: 16 },

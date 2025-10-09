@@ -1,3 +1,4 @@
+import Loading from '@/app/components/Loading';
 import { getCategories } from '@/lib/api/categoryApi';
 import { getProducts } from '@/lib/api/productApi';
 import { getCustomerById, getSession, updateCustomerById } from '@/lib/services/authService';
@@ -735,9 +736,11 @@ const AllProductsScreen: React.FC = () => {
   // ---------- Loading ----------
   if (loading) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={Colors.PRIMARY} />
-        <Text style={{ marginTop: 10, color: '#666' }}>Loading products...</Text>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Loading />
+        <Text style={{ marginTop: 12, fontSize: 18, fontWeight: '600', color: Colors.SECONDARY }}>
+          Loading your Products
+        </Text>
       </View>
     );
   }
@@ -805,7 +808,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f6f7fb' },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  header: { paddingTop: 15, paddingBottom: 8, paddingHorizontal: side, marginBottom: 5 },
+  header: { paddingTop: 35, paddingBottom: 8, paddingHorizontal: side, marginBottom: 5 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitle: { fontSize: 22, fontWeight: '800', color: '#ffffff' },
   headerSub: { fontSize: 12, color: '#f0f0f0', marginTop: 2 },
