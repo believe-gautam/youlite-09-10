@@ -44,7 +44,7 @@ const MobileRegistrationScreen = () => {
       console.log("Sending OTP to:", cleanMobile);
 
       // Call your send OTP API
-      const response = await fetch("http://youlitestore.in/app-api/send_otp.php?mobile="+cleanMobile, {
+      const response = await fetch("http://youlitestore.in/app-api/send_otp.php?mobile=" + cleanMobile, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,18 +87,18 @@ const MobileRegistrationScreen = () => {
       }
     } catch (error: any) {
       console.error("Error details:", error);
-      
+
       let errorMessage = "Something went wrong";
-      
+
       if (error.message.includes("Network request failed")) {
         errorMessage = "Network error. Please check your internet connection";
       } else if (error.message.includes("405")) {
-        console.log({error})
+        console.log({ error })
         errorMessage = "Server configuration error. Please contact support";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
@@ -323,3 +323,7 @@ const styles = StyleSheet.create({
 });
 
 export default MobileRegistrationScreen;
+
+
+
+
