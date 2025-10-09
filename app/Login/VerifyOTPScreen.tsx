@@ -1,4 +1,4 @@
-import { loginCustomerByEmail } from "../../lib/services/authService";
+import { OtpLoginCustomer } from "../../lib/services/authService";
 import Colors from "@/utils/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
@@ -95,7 +95,7 @@ const VerifyOTPScreen = () => {
         ]);
 
 
-        await loginCustomerByEmail(email);
+        await OtpLoginCustomer(email);
         Alert.alert("Success", "Login successful!");
         router.replace("/(tabs)");
 

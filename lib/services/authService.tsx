@@ -153,6 +153,23 @@ export const loginCustomer = async (payload: LoginPayload) => {
   }
 };
 
+
+export const OtpLoginCustomer = async (email: string) => {
+  const customer = await apiFindCustomerByEmail(email);
+  if (!customer) throw new Error("Customer not found.");
+
+  const user: AuthUser = {
+    id: customer.id,
+    email: customer.email,
+    first_name: customer.first_name,
+    last_name: customer.last_name,
+    name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim(),
+  };
+
+  await storeSession(user);
+  return user;
+};
+
 /**
  * Logout user
  */
