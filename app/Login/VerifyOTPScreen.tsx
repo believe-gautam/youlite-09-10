@@ -129,7 +129,7 @@ const VerifyOTPScreen = () => {
 
     try {
       // Call your send OTP API
-      const response = await fetch("http://youlitestore.in/app-api/send_otp.php", {
+      const response = await fetch(`http://youlitestore.in/app-api/send_otp.php?mobile=${mobile}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
