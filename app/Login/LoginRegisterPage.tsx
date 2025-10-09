@@ -530,9 +530,9 @@ const LoginRegisterPage = () => {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Sign In With Mobile 
+            Sign In With Mobile
           </Text>
-          <TouchableOpacity onPress={()=> router.push({ pathname: "/Login/MobileRegistrationScreen", }) }>
+          <TouchableOpacity onPress={() => router.push({ pathname: "/Login/MobileRegistrationScreen", })}>
             <Text>Click Here</Text>
           </TouchableOpacity>
         </View>
