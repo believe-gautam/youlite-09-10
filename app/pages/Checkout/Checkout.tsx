@@ -363,7 +363,9 @@ const Checkout: React.FC = () => {
       const razorpayOrder = await createRazorpayOrder(razorpayOrderPayload);
       console.log('Razorpay Order Response:', razorpayOrder);
       
-      if (!razorpayOrder?.id) {
+      const razorpayOrderId = razorpayOrder?.razorpay_order_id || razorpayOrder?.id;
+
+      if (!razorpayOrderId) {
         console.error('❌ No Razorpay order ID in response');
         throw new Error('Failed to create Razorpay order');
       }
@@ -399,10 +401,10 @@ const Checkout: React.FC = () => {
 
         // Razorpay Live Key :  rzp_live_RNs9lqLuduxCWX  
         // Razorpay Test Key : rzp_test_ROuqm8IgPPhMf2 
-        key: 'rzp_test_ROuqm8IgPPhMf2',// EXPO_PUBLIC_RAZORPAY_KEY_ID, //'rzp_test_ROuqm8IgPPhMf2',// 'rzp_live_RLljcmIjPif8dk', // 
+        key: 'rzp_live_RLljcmIjPif8dk',// EXPO_PUBLIC_RAZORPAY_KEY_ID, //'rzp_test_ROuqm8IgPPhMf2',// 'rzp_live_RLljcmIjPif8dk', // 
         amount: Math.round(total * 100).toString(), // Must be string
         name: 'YouLite Store',
-        order_id: wooCommerceOrder.id,
+        order_id: razorpayOrderId, //wooCommerceOrder.id,
         prefill: {
           email: validEmail,
           contact: validPhone,

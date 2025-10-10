@@ -1,5 +1,7 @@
+import axios from "axios";
 import {
   addOrder,
+  createRazorOrder,
   deleteOrder,
   getOrderDetail,
   getOrders,
@@ -7,6 +9,8 @@ import {
 } from "../../lib/api/orderApi";
 
 import { WooCommerce } from '@/lib/api/woocommerce';
+import { API_CONSUMER_KEY, API_CONSUMER_SECRET } from "@/utils/apiUtils/constants";
+import { getToken } from "./authService";
 
 
 // Service function to load all orders
@@ -69,20 +73,48 @@ export const removeOrder = async (id: number | string) => {
 // Your backend will use the Razorpay SDK to create an order and return the official `id`.
 export const createRazorpayOrder = async (payload: { amount: number; currency: string; receipt: string }) => {
   console.log('MOCK: Calling backend to create Razorpay order...');
-  // In a real app, this would be an `await fetch('/api/create-razorpay-order', { ... });`
-  // The backend would then use Razorpay's SDK to create the order.
+  try{
+      const razorpayOrder = {
+        id: `order_mock_${Date.now()}`, // This is the format of a real Razorpay Order ID.
+        entity: 'order',
+        amount: payload.amount,
+        currency: payload.currency,
+        receipt: payload.receipt,
+        status: 'created',
+      };
 
-  // MOCKING a successful Razorpay order creation response.
-  const razorpayOrder = {
-    id: `order_mock_${Date.now()}`, // This is the format of a real Razorpay Order ID.
-    entity: 'order',
-    amount: payload.amount,
-    currency: payload.currency,
-    receipt: payload.receipt,
-    status: 'created',
-  };
+      const API_URL = "https://youlitestore.in/wp-json/my-app/v1/create-razorpay-order";
 
-  return Promise.resolve(razorpayOrder);
+
+      // const result = await createRazorOrder({razorpayOrder});
+      const getTokenVal = await getToken();
+
+      // console.log({requestions: })
+
+            const response = await axios.post(
+            API_URL,
+            { amount: razorpayOrder.amount }, // payload
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer '+getTokenVal.token
+              },
+            }
+          );
+
+
+          console.log("✅ Razorpay Order Created:", response.data);
+          const result   = response.data;
+      return result;//Promise.resolve(result);
+  }catch(e){
+    console.log(`----------------------------------------------------`)
+    console.log({e:e});
+
+    console.log(`----------------------------------------------------`)
+    return false;
+
+
+  }
 };
 
 export const processRazorpayPayment = async (paymentData: {
