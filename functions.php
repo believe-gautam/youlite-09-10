@@ -1055,18 +1055,18 @@ function mobile_app_send_otp(WP_REST_Request $request) {
     }
     
     // Rate limiting: Check if OTP was sent recently (within 30 seconds)
-    $recent_otp = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM {$table} WHERE mobile=%s AND created_at > DATE_SUB(NOW(), INTERVAL 30 SECOND) ORDER BY created_at DESC LIMIT 1",
-        $mobile
-    ));
+    // $recent_otp = $wpdb->get_row($wpdb->prepare(
+    //     "SELECT * FROM {$table} WHERE mobile=%s AND created_at > DATE_SUB(NOW(), INTERVAL 30 SECOND) ORDER BY created_at DESC LIMIT 1",
+    //     $mobile
+    // ));
     
-    if ($recent_otp) {
-        return new WP_REST_Response([
-            'success' => false,
-            'message' => 'Please wait 30 seconds before requesting a new OTP',
-            'retry_after' => 30
-        ], 429);
-    }
+    // if ($recent_otp) {
+    //     return new WP_REST_Response([
+    //         'success' => false,
+    //         'message' => 'Please wait 30 seconds before requesting a new OTP',
+    //         'retry_after' => 30
+    //     ], 429);
+    // }
     
     // Generate 6-digit OTP
     $otp = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);

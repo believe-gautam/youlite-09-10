@@ -86,7 +86,6 @@ export const createRazorpayOrder = async (payload: { amount: number; currency: s
       const API_URL = "https://youlitestore.in/wp-json/my-app/v1/create-razorpay-order";
 
 
-      // const result = await createRazorOrder({razorpayOrder});
       const getTokenVal = await getToken();
 
       // console.log({requestions: })
@@ -101,10 +100,27 @@ export const createRazorpayOrder = async (payload: { amount: number; currency: s
               },
             }
           );
+          console.log('======================================')
+          console.log('======================================')
+          console.log('======================================')
+          console.log('======================================')
+          console.log('======================================')
+          console.log({ amount: razorpayOrder.amount }, // payload
+            {
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer '+getTokenVal.token
+              },
+            })
 
+            
+          console.log('======================================')
+          console.log('======================================')
+          console.log('======================================')
+          console.log('======================================')
 
           console.log("✅ Razorpay Order Created:", response.data);
-          const result   = response.data;
+          const result   = { "success": true, ...response.data};
       return result;//Promise.resolve(result);
   }catch(e){
     console.log(`----------------------------------------------------`)

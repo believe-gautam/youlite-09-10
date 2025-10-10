@@ -272,247 +272,233 @@ const Checkout: React.FC = () => {
     }
   };
 
-  const placeOrder = async () => {
-    console.log('=== PLACE ORDER STARTED ===');
+
+  // Updated placeOrder function with proper error handling
+
+const placeOrder = async () => {
+  console.log('=== PLACE ORDER STARTED ===');
+  
+  if (!userId) {
+    console.error('❌ No userId found');
+    showToast('User session expired. Please login again');
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    console.error('❌ Cart is empty');
+    showToast('Your cart is empty');
+    return;
+  }
+
+  const shippingError = validateAddress(shipping, 'Shipping');
+  if (shippingError) {
+    showToast(shippingError);
+    setActiveTab('shipping');
+    return;
+  }
+
+  const billingError = validateAddress(billing, 'Billing');
+  if (billingError) {
+    showToast(billingError);
+    setActiveTab('billing');
+    return;
+  }
+
+  setPlacingOrder(true);
+  let wooCommerceOrderId: number | null = null;
+
+  try {
+    // Step 1: Create WooCommerce Order
+    console.log('📦 Creating WooCommerce Order...');
+    const orderPayload = {
+      customer_id: userId,
+      payment_method: "razorpay",
+      payment_method_title: "Razorpay",
+      set_paid: false,
+      status: 'pending',
+      billing: billing,
+      shipping: shipping,
+      line_items: cartItems.map((item) => ({
+        product_id: Number(item.id),
+        quantity: item.quantity,
+      })),
+      shipping_lines: [
+        {
+          method_id: "flat_rate",
+          method_title: "Flat Rate",
+          total: String(delivery),
+        },
+      ],
+    };
+
+    const wooCommerceOrder = await createOrder(orderPayload);
     
-    if (!userId) {
-      console.error('❌ No userId found');
-      showToast('User session expired. Please login again');
-      return;
+    if (!wooCommerceOrder?.id) {
+      throw new Error('Failed to create WooCommerce order');
     }
-    console.log('✅ User ID:', userId);
 
-    if (cartItems.length === 0) {
-      console.error('❌ Cart is empty');
-      showToast('Your cart is empty');
-      return;
-    }
-    console.log('✅ Cart items:', cartItems.length);
+    wooCommerceOrderId = wooCommerceOrder.id;
+    console.log('✅ WooCommerce Order Created. ID:', wooCommerceOrderId);
 
-    const shippingError = validateAddress(shipping, 'Shipping');
-    if (shippingError) {
-      console.error('❌ Shipping validation failed:', shippingError);
-      showToast(shippingError);
-      setActiveTab('shipping');
-      return;
-    }
-    console.log('✅ Shipping address validated');
-
-    const billingError = validateAddress(billing, 'Billing');
-    if (billingError) {
-      console.error('❌ Billing validation failed:', billingError);
-      showToast(billingError);
-      setActiveTab('billing');
-      return;
-    }
-    console.log('✅ Billing address validated');
-
-    setPlacingOrder(true);
-    let wooCommerceOrderId: number | null = null;
-
-    try {
-      // Step 1: Create WooCommerce Order
-      console.log('📦 STEP 1: Creating WooCommerce Order...');
-      const orderPayload = {
-        customer_id: userId,
-        payment_method: "razorpay",
-        payment_method_title: "Razorpay",
-        set_paid: false,
-        status: 'pending',
-        billing: billing,
-        shipping: shipping,
-        line_items: cartItems.map((item) => ({
-          product_id: Number(item.id),
-          quantity: item.quantity,
-        })),
-        shipping_lines: [
-          {
-            method_id: "flat_rate",
-            method_title: "Flat Rate",
-            total: String(delivery),
-          },
-        ],
-      };
-      console.log('Order Payload:', JSON.stringify(orderPayload, null, 2));
-
-      const wooCommerceOrder = await createOrder(orderPayload);
-      console.log('WooCommerce Order Response:', wooCommerceOrder);
-      
-      if (!wooCommerceOrder?.id) {
-        console.error('❌ No order ID in response');
-        throw new Error('Failed to create order');
+    // Step 2: Create Razorpay Order
+    console.log('💳 Creating Razorpay Order...');
+    
+    // ✅ Calculate amount in paise (ensure integer)
+    const amountInPaise = Math.round(total * 100);
+    
+    const razorpayOrderPayload = {
+      amount: amountInPaise, // Send as number, backend will handle conversion
+      currency: 'INR',
+      receipt: `rcpt_${wooCommerceOrder.id}_${Date.now()}`,
+      notes: {
+        woo_order_id: wooCommerceOrder.id.toString(),
+        customer_id: userId.toString(),
       }
+    };
 
-      wooCommerceOrderId = wooCommerceOrder.id;
-      console.log('✅ WooCommerce Order Created. ID:', wooCommerceOrderId);
-      const order_id = `order_${wooCommerceOrder.id}`;//_${Date.now()}_${wooCommerceOrderId}`;
+    console.log('Razorpay Order Payload:', razorpayOrderPayload);
+    const razorpayOrder = await createRazorpayOrder(razorpayOrderPayload);
+    
+    console.log('Razorpay Order Response:', razorpayOrder);
+    
+    // ✅ FIX: Handle response properly
+    if (!razorpayOrder?.success) {
+      console.error('❌ Razorpay order creation failed:', razorpayOrder);
+      throw new Error('Failed to create Razorpay order');
+    }
 
-      // Step 2: Create Razorpay Order
-      console.log('💳 STEP 2: Creating Razorpay Order...');
-      const razorpayOrderPayload = {
-        amount: Math.round(total * 100), // Amount in paise, ensure integer
-        currency: 'INR',
-        receipt: `order_${wooCommerceOrder.id}_${Date.now()}`,
-        notes: {
-          woo_order_id: wooCommerceOrder.id.toString(),
-          customer_id: userId.toString(),
-        }
-      };
-      console.log('Razorpay Order Payload:', JSON.stringify(razorpayOrderPayload, null, 2));
+    // razorpayOrder.id || 
+    // ✅ Get order ID from response (backend returns both 'id' and 'razorpay_order_id')
+    const razorpayOrderId = razorpayOrder.razorpay_order_id;
+    console.log(`✅ Get order ID from response (backend returns both 'id' and '${razorpayOrderId}')`)
 
-      const razorpayOrder = await createRazorpayOrder(razorpayOrderPayload);
-      console.log('Razorpay Order Response:', razorpayOrder);
-      
-      const razorpayOrderId = razorpayOrder?.razorpay_order_id || razorpayOrder?.id;
 
-      if (!razorpayOrderId) {
-        console.error('❌ No Razorpay order ID in response');
-        throw new Error('Failed to create Razorpay order');
+    if (!razorpayOrderId) {
+      console.error('❌ No Razorpay order ID in response:', razorpayOrder);
+      throw new Error('Invalid Razorpay order response');
+    }
+    
+    console.log('✅ Razorpay Order ID:', razorpayOrderId);
+
+    // Step 3: Prepare Razorpay Checkout
+    console.log('🔐 Preparing Razorpay Checkout...');
+    
+    // ✅ Clean and validate contact info
+    const cleanPhone = billing?.phone?.replace(/\D/g, '') || '';
+    const validPhone = cleanPhone.length === 10 ? cleanPhone : '';
+    
+    const validEmail = billing?.email && validateEmail(billing.email) 
+      ? billing.email 
+      : '';
+    
+    const fullName = `${billing?.first_name || ''} ${billing?.last_name || ''}`.trim();
+
+    // ✅ Build prefill object with only valid data
+    const prefillData: any = {};
+    if (validEmail) prefillData.email = validEmail;
+    if (validPhone) prefillData.contact = validPhone;
+    if (fullName) prefillData.name = fullName;
+
+    console.log('Prefill Data:', prefillData);
+
+    // ✅ Razorpay checkout options
+    const options = {
+      description: `Order #${wooCommerceOrder.id}`,
+      image: 'https://youlite.in/wp-content/uploads/2022/06/short-logo.png',
+      currency: 'INR',
+      key: razorpayOrder.key_id || 'rzp_live_RLljcmIjPif8dk', // Use key from response
+      amount: amountInPaise.toString(), // ✅ MUST be string
+      name: 'YouLite Store',
+      order_id: razorpayOrderId, // ✅ Use the Razorpay order ID
+      prefill: prefillData,
+      theme: { 
+        color: Colors.PRIMARY 
+      },
+      notes: {
+        woo_order_id: wooCommerceOrder.id.toString(),
+        customer_id: userId.toString()
       }
-      console.log('✅ Razorpay Order Created. ID:', razorpayOrder.id);
+    };
 
-      // Step 3: Prepare Razorpay Checkout Options
-      console.log('🔐 STEP 3: Preparing Razorpay Checkout...');
-      
-      // Clean and validate phone number
-      const cleanPhone = billing?.phone?.replace(/\D/g, '') || '';
-      const validPhone = cleanPhone.length === 10 ? cleanPhone : '9999999999';
-      
-      // Validate email
-      const validEmail = billing?.email && validateEmail(billing.email) 
-        ? billing.email 
-        : 'customer@example.com';
-      
-      // Clean name
-      const fullName = `${billing?.first_name || ''} ${billing?.last_name || ''}`.trim();
-      const validName = fullName || 'Customer';
+    console.log('Razorpay Checkout Options:', {
+      ...options,
+      key: options.key.substring(0, 10) + '...' // Hide full key in logs
+    });
 
-      console.log('Prefill Data:', {
-        email: validEmail,
-        contact: validPhone,
-        name: validName
+    console.log('🚀 Opening Razorpay Checkout...');
+    const paymentData = await RazorpayCheckout.open(options);
+    console.log('✅ Payment Success:', paymentData);
+
+    // Step 4: Verify payment
+    console.log('🔍 Verifying payment...');
+    const verificationPayload = {
+      order_id: wooCommerceOrder.id,
+      razorpay_payment_id: paymentData.razorpay_payment_id,
+      razorpay_order_id: paymentData.razorpay_order_id,
+      razorpay_signature: paymentData.razorpay_signature
+    };
+    
+    console.log('Verification Payload:', verificationPayload);
+    const verificationResult = await processRazorpayPayment(verificationPayload);
+    
+    console.log('✅ Payment verified:', verificationResult);
+
+    // Step 5: Clear cart
+    if (params.buyNow !== 'true') {
+      console.log('🛒 Clearing cart...');
+      await updateCustomerById(userId, { 
+        meta_data: [{ key: 'cart', value: [] }] 
       });
-      console.log({order_id,order_id2:wooCommerceOrder.id})
-
-      const options = {
-        description: `Order #${wooCommerceOrder.id}`,
-        image: 'https://youlite.in/wp-content/uploads/2022/06/short-logo.png',
-        currency: 'INR',
-
-        // Razorpay Live Key :  rzp_live_RNs9lqLuduxCWX  
-        // Razorpay Test Key : rzp_test_ROuqm8IgPPhMf2 
-        key: 'rzp_live_RLljcmIjPif8dk',// EXPO_PUBLIC_RAZORPAY_KEY_ID, //'rzp_test_ROuqm8IgPPhMf2',// 'rzp_live_RLljcmIjPif8dk', // 
-        amount: Math.round(total * 100).toString(), // Must be string
-        name: 'YouLite Store',
-        order_id: razorpayOrderId, //wooCommerceOrder.id,
-        prefill: {
-          email: validEmail,
-          contact: validPhone,
-          name: validName
-        },
-        theme: { 
-          color: Colors.PRIMARY 
-        },
-        notes: {
-          woo_order_id: wooCommerceOrder.id.toString(),
-          customer_id: userId.toString()
-        }
-      };
-      
-
-      console.log('Razorpay Checkout Options:', JSON.stringify(options, null, 2));
-      console.log('🚀 Opening Razorpay Checkout...');
-
-      const paymentData = await RazorpayCheckout.open(options);
-      console.log('✅ Payment Success:', paymentData);
-
-      // Step 4: Verify payment on backend
-      console.log('🔍 STEP 4: Verifying payment on backend...');
-      const verificationPayload = {
-        order_id: wooCommerceOrder.id,
-        razorpay_payment_id: paymentData.razorpay_payment_id,
-        razorpay_order_id: paymentData.razorpay_order_id,
-        razorpay_signature: paymentData.razorpay_signature
-      };
-      console.log('Verification Payload:', verificationPayload);
-
-      await processRazorpayPayment(verificationPayload);
-      console.log('✅ Payment verified successfully');
-
-      // Step 5: Clear cart (only if not buy now)
-      if (params.buyNow !== 'true') {
-        console.log('🛒 STEP 5: Clearing cart...');
-        await updateCustomerById(userId, { 
-          meta_data: [{ key: 'cart', value: [] }] 
-        });
-        console.log('✅ Cart cleared');
-      } else {
-        console.log('ℹ️ Buy Now mode - Cart not cleared');
-      }
-
-      showToast('Order placed successfully!');
-      console.log('🎉 ORDER COMPLETED SUCCESSFULLY!');
-      
-      setTimeout(() => {
-        router.replace({
-          pathname: '/pages/orderHistory/orderHistory',
-          params: { 
-            orderId: wooCommerceOrder.id.toString()
-          }
-        });
-      }, 1500);
-
-    } catch (error: any) {
-      console.error('❌ PAYMENT ERROR:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      
-      // Handle Razorpay specific errors
-      if (error.error) {
-        const errorCode = error.error.code;
-        const errorDescription = error.error.description;
-        const errorReason = error.error.reason;
-        const errorSource = error.error.source;
-        const errorStep = error.error.step;
-        
-        console.error('Razorpay Error Details:', {
-          code: errorCode,
-          description: errorDescription,
-          reason: errorReason,
-          source: errorSource,
-          step: errorStep
-        });
-        
-        switch (errorCode) {
-          case 0: // Network error
-            showToast('Network error. Please check your connection and try again');
-            break;
-          case 1: // Razorpay error
-            showToast(`Payment error: ${errorDescription || errorReason || 'Something went wrong'}`);
-            break;
-          case 2: // User cancelled
-            showToast('Payment cancelled');
-            break;
-          default:
-            showToast(`Payment failed: ${errorDescription || errorReason || 'Unknown error'}`);
-        }
-      } else if (error.message) {
-        console.error('Error message:', error.message);
-        showToast(error.message);
-      } else {
-        console.error('Unknown error type');
-        showToast('Failed to process payment. Please try again.');
-      }
-
-      // If order was created but payment failed, you might want to handle it
-      if (wooCommerceOrderId) {
-        console.log('⚠️ Order created but payment failed. Order ID:', wooCommerceOrderId);
-        // Optionally update order status to 'failed' or 'cancelled'
-      }
-    } finally {
-      setPlacingOrder(false);
-      console.log('=== PLACE ORDER ENDED ===');
+      console.log('✅ Cart cleared');
     }
-  };
+
+    showToast('Order placed successfully!');
+    console.log('🎉 ORDER COMPLETED!');
+    
+    setTimeout(() => {
+      router.replace({
+        pathname: '/pages/orderHistory/orderHistory',
+        params: { 
+          orderId: wooCommerceOrder.id.toString()
+        }
+      });
+    }, 1500);
+
+  } catch (error: any) {
+    console.error('❌ ORDER ERROR:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Handle Razorpay errors
+    if (error.code !== undefined) {
+      switch (error.code) {
+        case 0:
+          showToast('Network error. Please check your connection');
+          break;
+        case 1:
+          showToast(error.description || 'Payment failed');
+          break;
+        case 2:
+          showToast('Payment cancelled by user');
+          break;
+        default:
+          showToast('Payment error. Please try again');
+      }
+    } else if (error.description) {
+      showToast(error.description);
+    } else if (error.message) {
+      showToast(error.message);
+    } else {
+      showToast('Failed to process payment. Please try again');
+    }
+
+    if (wooCommerceOrderId) {
+      console.log('⚠️ Order created but payment failed. Order ID:', wooCommerceOrderId);
+    }
+  } finally {
+    setPlacingOrder(false);
+    console.log('=== PLACE ORDER ENDED ===');
+  }
+};
 
   // ✅ FIXED: Separate handlers for shipping and billing
   const handleShippingChange = useCallback((field: keyof Address, value: string) => {
