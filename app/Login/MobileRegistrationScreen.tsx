@@ -44,7 +44,7 @@ const MobileRegistrationScreen = () => {
       console.log("Sending OTP to:", cleanMobile);
 
       // Call your send OTP API
-      const response = await fetch("http://youlitestore.in/app-api/send_otp.php?mobile=" + cleanMobile, {
+      const response = await fetch("https://youlitestore.in/wp-json/mobile-app/v1/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

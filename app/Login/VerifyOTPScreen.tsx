@@ -21,7 +21,7 @@ const VerifyOTPScreen = () => {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isLoading, setIsLoading] = useState(false);
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState(30); // Changed to 30 seconds
   const [canResend, setCanResend] = useState(false);
 
   // Refs for OTP inputs
@@ -71,34 +71,57 @@ const VerifyOTPScreen = () => {
     setIsLoading(true);
 
     try {
-      // Call your verify OTP API
-      const response = await fetch(`http://youlitestore.in/app-api/verify_otp.php?otp=${otpCode}&mobile=${mobile}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mobile: mobile,
-          otp: otpCode,
-        }),
-      });
-      const data = await response.json();
-      // console.log({response:JSON.stringify(data)})
-      const email = data?.user_data?.user_email || null;
-
-      if (data.success && email) {
-        Alert.alert("Success", "Mobile number verified successfully!", [
-          {
-            text: "OK",
-            onPress: () => router.replace("/(tabs)"),
+      // Call NEW WordPress JWT OTP verify API
+      const response = await fetch(
+        "https://youlitestore.in/wp-json/mobile-app/v1/verify-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        ]);
+          body: JSON.stringify({
+            mobile: mobile,
+            otp: otpCode,
+          }),
+        }
+      );
 
+      const data = await response.json();
+      console.log("Verify OTP Response:", data);
 
-        await OtpLoginCustomer(email);
-        Alert.alert("Success", "Login successful!");
-        router.replace("/(tabs)");
+      if (data.success) {
+        // Extract user data and JWT token
+        const userData = data.data;
+        const jwtToken = userData.token;
+        const userId = userData.user_id;
+        const userEmail = userData.email;
+        const displayName = userData.display_name;
+        const firstName = userData.first_name || "";
+        const lastName = userData.last_name || "";
 
+        // Login user with JWT token
+        await OtpLoginCustomer({
+          user_id: userId,
+          email: userEmail,
+          mobile: mobile,
+          display_name: displayName,
+          first_name: firstName,
+          last_name: lastName,
+          token: jwtToken,
+        });
+
+        Alert.alert(
+          "Success",
+          data.is_new_user
+            ? "Account created successfully!"
+            : "Login successful!",
+          [
+            {
+              text: "OK",
+              onPress: () => router.replace("/(tabs)"),
+            },
+          ]
+        );
       } else {
         Alert.alert(
           "Error",
@@ -116,6 +139,7 @@ const VerifyOTPScreen = () => {
         );
       }
     } catch (error: any) {
+      console.error("Verify OTP Error:", error);
       Alert.alert("Error", error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
@@ -128,22 +152,25 @@ const VerifyOTPScreen = () => {
     setIsLoading(true);
 
     try {
-      // Call your send OTP API
-      const response = await fetch(`http://youlitestore.in/app-api/send_otp.php?mobile=${mobile}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          mobile: mobile,
-        }),
-      });
+      // Call NEW WordPress send OTP API
+      const response = await fetch(
+        "https://youlitestore.in/wp-json/mobile-app/v1/verify-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mobile: mobile,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         Alert.alert("Success", "OTP resent successfully");
-        setTimer(60);
+        setTimer(30); // 30 seconds timer
         setCanResend(false);
         setOtp(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
@@ -151,6 +178,7 @@ const VerifyOTPScreen = () => {
         Alert.alert("Error", data.message || "Failed to resend OTP");
       }
     } catch (error: any) {
+      console.error("Resend OTP Error:", error);
       Alert.alert("Error", error?.message || "Something went wrong");
     } finally {
       setIsLoading(false);
@@ -374,6 +402,3 @@ const styles = StyleSheet.create({
 });
 
 export default VerifyOTPScreen;
-
-
-

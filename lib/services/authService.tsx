@@ -17,6 +17,7 @@ export type AuthUser = {
   id: number;
   email: string;
   name?: string;
+  mobile?: string;
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
@@ -36,6 +37,17 @@ export type LoginPayload = {
   email: string;
   password: string;
 };
+
+
+interface OtpLoginPayload {
+  user_id: number;
+  email: string;
+  mobile: string;
+  display_name: string;
+  first_name: string;
+  last_name: string;
+  token: string;
+}
 
 // ----------------- SESSION MANAGEMENT -----------------
 
@@ -70,6 +82,20 @@ export const clearSession = async () => {
   } catch (error) {
     console.error("Error clearing session:", error);
     return false;
+  }
+};
+
+
+export const getToken = async () => {
+  try {
+    const sessionData = await SecureStore.getItemAsync(SESSION_KEY);
+    if (!sessionData) return null;
+
+    const session = JSON.parse(sessionData);
+    return session; // { user, token }
+  } catch (error) {
+    console.error("Error getting session:", error);
+    return null;
   }
 };
 
@@ -154,20 +180,221 @@ export const loginCustomer = async (payload: LoginPayload) => {
 };
 
 
-export const OtpLoginCustomer = async (email: string) => {
-  const customer = await apiFindCustomerByEmail(email);
-  if (!customer) throw new Error("Customer not found.");
 
-  const user: AuthUser = {
-    id: customer.id,
-    email: customer.email,
-    first_name: customer.first_name,
-    last_name: customer.last_name,
-    name: `${customer.first_name || ""} ${customer.last_name || ""}`.trim(),
-  };
+/**
+ * NEW: OTP-based login with JWT token
+ * This method stores the JWT token received from verify-otp endpoint
+ */
+export const OtpLoginCustomer = async (payload: OtpLoginPayload) => {
+  try {
+    const user: AuthUser = {
+      id: payload.user_id,
+      email: payload.email,
+      mobile: payload.mobile,
+      first_name: payload.first_name,
+      last_name: payload.last_name,
+      // display_name: payload.display_name,
+      name:
+        `${payload.first_name || ""} ${payload.last_name || ""}`.trim() ||
+        payload.display_name,
+    };
 
-  await storeSession(user);
-  return user;
+    // Store session with JWT token from OTP verification
+    await storeSession(user, payload.token);
+
+    console.log("OTP Login successful:", user);
+    return user;
+  } catch (error: any) {
+    console.error("OTP Login error:", error);
+    throw new Error(error.message || "OTP login failed");
+  }
+};
+
+
+
+// ===========================
+// API Helper Functions
+// ===========================
+
+/**
+ * Find customer by email from WooCommerce API
+ * (You may need to adjust this based on your WooCommerce setup)
+ */
+
+/**
+ * Get authenticated user profile from server
+ * Uses JWT token for authentication
+ */
+export const getAuthenticatedUserProfile = async () => {
+  try {
+    const { token } = await getSession();
+    if (!token) throw new Error("No authentication token found");
+
+    const response = await axios.get(
+      "YOUR_WORDPRESS_URL/wp-json/mobile-app/v1/profile",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.success) {
+      const userData = response.data.data;
+      const user: AuthUser = {
+        id: userData.user_id,
+        email: userData.email,
+        mobile: userData.mobile,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        // display_name: userData.display_name,
+        name:
+          `${userData.first_name || ""} ${userData.last_name || ""}`.trim() ||
+          userData.display_name,
+      };
+
+      // Update stored session
+      await storeSession(user, token);
+      return user;
+    }
+
+    throw new Error("Failed to fetch user profile");
+  } catch (error: any) {
+    console.error("Get profile error:", error);
+    throw new Error(error.message || "Failed to fetch profile");
+  }
+};
+
+/**
+ * Update user profile
+ * Uses JWT token for authentication
+ */
+export const updateUserProfile = async (profileData: {
+  display_name?: string;
+  first_name?: string;
+  last_name?: string;
+  billing_first_name?: string;
+  billing_last_name?: string;
+  billing_address_1?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postcode?: string;
+}) => {
+  try {
+    const { token } = await getSession();
+    if (!token) throw new Error("No authentication token found");
+
+    const response = await axios.post(
+      "YOUR_WORDPRESS_URL/wp-json/mobile-app/v1/profile",
+      profileData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.success) {
+      // Refresh user profile after update
+      await getAuthenticatedUserProfile();
+      return true;
+    }
+
+    throw new Error("Failed to update profile");
+  } catch (error: any) {
+    console.error("Update profile error:", error);
+    throw new Error(error.message || "Failed to update profile");
+  }
+};
+
+/**
+ * Refresh JWT token
+ * Call this periodically or when token is about to expire
+ */
+export const refreshAuthToken = async () => {
+  try {
+    const { token: oldToken } = await getSession();
+    if (!oldToken) throw new Error("No authentication token found");
+
+    const response = await axios.post(
+      "YOUR_WORDPRESS_URL/wp-json/mobile-app/v1/refresh-token",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${oldToken}`,
+        },
+      }
+    );
+
+    if (response.data.success) {
+      const newToken = response.data.data.token;
+      
+      // Get current user and update with new token
+      const { user } = await getSession();
+      if (user) {
+        await storeSession(user, newToken);
+      }
+      
+      return newToken;
+    }
+
+    throw new Error("Failed to refresh token");
+  } catch (error: any) {
+    console.error("Refresh token error:", error);
+    // If refresh fails, logout user
+    await clearSession();
+    throw new Error(error.message || "Session expired. Please login again.");
+  }
+};
+
+// ===========================
+// Axios Interceptor for Auto Token Refresh
+// ===========================
+
+/**
+ * Setup axios interceptor to automatically add JWT token to requests
+ * and handle token refresh on 401 errors
+ */
+export const setupAxiosInterceptors = () => {
+  // Request interceptor - add token to all requests
+  axios.interceptors.request.use(
+    async (config) => {
+      const { token } = await getSession();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Response interceptor - handle token expiry
+  axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+
+      // If 401 and haven't retried yet, try to refresh token
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          const newToken = await refreshAuthToken();
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return axios(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, logout user
+          await clearSession();
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
 };
 
 /**
