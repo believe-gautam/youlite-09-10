@@ -1,6 +1,7 @@
 import { getProductDetail } from '@/lib/api/productApi';
 import { getCustomerById, getSession, updateCustomerById } from '@/lib/services/authService';
-import { createOrder, createRazorpayOrder, processRazorpayPayment } from '@/lib/services/orderService';
+// import {  } from '@/lib/services/orderService';
+import { createOrder, createRazorpayOrder, processRazorpayPayment, updateOrderStatus } from '@/lib/services/orderService';
 import Colors from '@/utils/Colors';
 import Dimenstion from '@/utils/Dimenstion';
 import { Ionicons } from '@expo/vector-icons';
@@ -426,8 +427,14 @@ const placeOrder = async () => {
     });
 
     console.log('🚀 Opening Razorpay Checkout...');
-    const paymentData = await RazorpayCheckout.open(options);
-    console.log('✅ Payment Success:', paymentData);
+    // const paymentData = await RazorpayCheckout.open(options);
+
+    RazorpayCheckout.open(options).then( async(paymentData) => {
+    // handle success
+
+
+
+     console.log('✅ Payment Success:', paymentData);
 
     // Step 4: Verify payment
     console.log('🔍 Verifying payment...');
@@ -439,7 +446,8 @@ const placeOrder = async () => {
     };
     
     console.log('Verification Payload:', verificationPayload);
-    const verificationResult = await processRazorpayPayment(verificationPayload);
+    // const verificationResult = await processRazorpayPayment(verificationPayload);
+    const verificationResult = await updateOrderStatus(wooCommerceOrder.id,'processing');
     
     console.log('✅ Payment verified:', verificationResult);
 
@@ -463,6 +471,15 @@ const placeOrder = async () => {
         }
       });
     }, 1500);
+
+  }).catch((error) => {
+    // handle failure
+    alert(`Error: ${error.code} | ${error.description}`);
+    showToast(error.description || 'Network error. Please check your connection');
+
+  });
+
+   
 
   } catch (error: any) {
     console.error('❌ ORDER ERROR:', error);
